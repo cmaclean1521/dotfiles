@@ -18,7 +18,7 @@
       KeyRepeat = 2;          # fast key repeat
       InitialKeyRepeat = 15;  # short delay before repeat
       _HIHideMenuBar = false;  # keep the menu bar always visible
-      AppleShowAllExtensions = false;  # keep .app hidden on apps in Spotlight/Finder
+      AppleShowAllExtensions = true;
     };
     dock.autohide = true;
     finder.FXPreferredViewStyle = "Nlsv";  # list view by default
