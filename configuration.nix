@@ -39,7 +39,8 @@
     ];
     casks = [
       "wezterm"
-      "claude-code"
+      # claude-code cask intentionally omitted: Claude Code is already managed
+      # by its own native self-updating installer (~/.local/bin/claude).
     ];
   };
 }

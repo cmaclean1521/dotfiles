@@ -21,12 +21,20 @@ in
   ];
   fonts.fontconfig.enable = true;
   home.sessionVariables.EDITOR = "nvim";
+  home.sessionPath = [
+    "$HOME/.opencode/bin"
+    "$HOME/.local/bin"
+    "$HOME/.antigravity-ide/antigravity-ide/bin"
+  ];
 
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true;      # ghost text from history
     syntaxHighlighting.enable = true;  # commands turn green when valid
     initContent = ''
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
       bindkey '^f' autosuggest-accept
     '';
     shellAliases = {
