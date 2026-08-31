@@ -16,6 +16,9 @@ Set-PSReadLineOption -Colors @{ InlineSuggestion = '#5c6370' }
 # Mirrors home.nix's bindkey '^f' autosuggest-accept: ForwardChar accepts the
 # suggestion when the cursor is already at the end of the line (same as RightArrow).
 Set-PSReadLineKeyHandler -Chord 'Ctrl+f' -Function ForwardChar
+# PowerShell's default Tab cycles matches in place with nothing shown; this
+# shows the full candidate list below the line, like zsh's completion menu.
+Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 
 function .. { Set-Location .. }
 function add { git add . }

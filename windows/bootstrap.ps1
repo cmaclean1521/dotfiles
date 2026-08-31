@@ -40,16 +40,22 @@ Get-ChildItem "$extractPath\*.ttf" | ForEach-Object {
   New-ItemProperty -Path $regKey -Name "$($_.BaseName) (TrueType)" -Value $_.Name -PropertyType String -Force | Out-Null
 }
 Remove-Item $zipPath, $extractPath -Recurse -Force
-# Notify already-running apps that the font list changed. GDI-based apps pick
-# this up immediately; font-kit/DirectWrite-based apps (WezTerm included)
-# still need a full restart, not just a config reload, to rescan fonts.
+# The registry entry alone only makes the font persist for the NEXT logon -
+# it does not load into the CURRENT session's font table. AddFontResource
+# registers each file for this session immediately; without it, no amount of
+# restarting an app will make the font visible until you log off and back on.
 Add-Type -Namespace Win32 -Name NativeMethods -MemberDefinition @"
+[DllImport("gdi32.dll", CharSet = CharSet.Auto)]
+public static extern int AddFontResource(string lpFileName);
 [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
 public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
 "@
+Get-ChildItem "$fontsDir\*.ttf" | ForEach-Object {
+  [Win32.NativeMethods]::AddFontResource($_.FullName) | Out-Null
+}
 $result = [UIntPtr]::Zero
 [Win32.NativeMethods]::SendMessageTimeout([IntPtr]0xffff, 0x001D, [UIntPtr]::Zero, $null, 2, 3000, [ref]$result) | Out-Null
-Write-Host "    Hack Nerd Font installed for this user - fully restart WezTerm (not just reload) to see it."
+Write-Host "    Hack Nerd Font installed and loaded for this session - fully restart WezTerm (not just reload) to see it."
 
 Write-Host "==> Step 3: XDG_CONFIG_HOME (so Neovim reads ~\.config\nvim like the Mac setup)"
 # Neovim on Windows defaults to %LOCALAPPDATA%\nvim unless this is set.
