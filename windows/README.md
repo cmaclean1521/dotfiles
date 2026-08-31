@@ -77,6 +77,14 @@ once, persistently, to `~\.config`, so Neovim (and any other XDG-aware tool you 
 later) resolves the same way it does on the Mac. WezTerm doesn't need this - it checks
 `~\.config\wezterm\wezterm.lua` directly on every platform.
 
+**If `rebuild.ps1` can't write the PowerShell profile:** Windows Defender's
+Controlled Folder Access (ransomware protection) protects Documents by default, and the
+PowerShell profile (`$PROFILE`) lives there. If it's enabled (check with
+`Get-MpPreference | Select EnableControlledFolderAccess`), scripts silently can't create
+files in Documents - `rebuild.ps1` catches this and prints the exact source/destination
+path so you can copy the file yourself in File Explorer (which is allowed by default).
+This isn't specific to this repo; it'll block any script writing to Documents.
+
 **`cc`/`co` shortcuts differ.** The Mac aliases are `cc='claude --dangerously-skip-permissions'`
 and `co='codex --full-auto'`. This machine's PowerShell profile drops
 `--dangerously-skip-permissions` from `cc` (a deliberate choice made when porting this

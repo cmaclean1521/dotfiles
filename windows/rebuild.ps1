@@ -13,12 +13,17 @@ $HomeCfg = Join-Path $RepoRoot 'home\.config'
 
 function Copy-Config($Src, $Dst) {
   $parent = Split-Path $Dst -Parent
-  if ($parent) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
+  if ($parent) { New-Item -ItemType Directory -Force -Path $parent -ErrorAction Stop | Out-Null }
   if (Test-Path $Src -PathType Container) {
-    New-Item -ItemType Directory -Force -Path $Dst | Out-Null
-    robocopy $Src $Dst /MIR /NFL /NDL /NJH /NJS | Out-Null
+    New-Item -ItemType Directory -Force -Path $Dst -ErrorAction Stop | Out-Null
+    $roboOutput = robocopy $Src $Dst /MIR /NFL /NDL /NJH /NJS
+    # Robocopy exit codes are bit flags: 0-7 mean success (possibly with info
+    # flags set), 8+ means at least one file failed to copy.
+    if ($LASTEXITCODE -ge 8) {
+      throw "robocopy failed copying $Src -> $Dst (exit $LASTEXITCODE):`n$($roboOutput -join "`n")"
+    }
   } else {
-    Copy-Item $Src $Dst -Force
+    Copy-Item $Src $Dst -Force -ErrorAction Stop
   }
 }
 
@@ -35,7 +40,14 @@ Copy-Config $agents "$HOME\.codex\AGENTS.md"
 Copy-Config $agents "$HOME\.config\opencode\AGENTS.md"
 
 Write-Host "==> PowerShell profile"
-Copy-Config (Join-Path $PSScriptRoot 'Microsoft.PowerShell_profile.ps1') $PROFILE
+try {
+  Copy-Config (Join-Path $PSScriptRoot 'Microsoft.PowerShell_profile.ps1') $PROFILE
+} catch {
+  Write-Host "    Could not write $PROFILE ($($_.Exception.Message))"
+  Write-Host "    On a machine with Controlled Folder Access enabled, Documents is protected and"
+  Write-Host "    scripts can't write there silently. Copy the file yourself in File Explorer:"
+  Write-Host "    $(Join-Path $PSScriptRoot 'Microsoft.PowerShell_profile.ps1') -> $PROFILE"
+}
 
 Write-Host "==> Claude Code settings"
 $claudeSettings = "$HOME\.claude\settings.json"
