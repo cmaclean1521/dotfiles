@@ -40,7 +40,16 @@ Get-ChildItem "$extractPath\*.ttf" | ForEach-Object {
   New-ItemProperty -Path $regKey -Name "$($_.BaseName) (TrueType)" -Value $_.Name -PropertyType String -Force | Out-Null
 }
 Remove-Item $zipPath, $extractPath -Recurse -Force
-Write-Host "    Hack Nerd Font installed for this user - restart apps to see it."
+# Notify already-running apps that the font list changed. GDI-based apps pick
+# this up immediately; font-kit/DirectWrite-based apps (WezTerm included)
+# still need a full restart, not just a config reload, to rescan fonts.
+Add-Type -Namespace Win32 -Name NativeMethods -MemberDefinition @"
+[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+"@
+$result = [UIntPtr]::Zero
+[Win32.NativeMethods]::SendMessageTimeout([IntPtr]0xffff, 0x001D, [UIntPtr]::Zero, $null, 2, 3000, [ref]$result) | Out-Null
+Write-Host "    Hack Nerd Font installed for this user - fully restart WezTerm (not just reload) to see it."
 
 Write-Host "==> Step 3: XDG_CONFIG_HOME (so Neovim reads ~\.config\nvim like the Mac setup)"
 # Neovim on Windows defaults to %LOCALAPPDATA%\nvim unless this is set.
