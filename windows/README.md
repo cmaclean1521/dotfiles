@@ -83,7 +83,18 @@ PowerShell profile (`$PROFILE`) lives there. If it's enabled (check with
 `Get-MpPreference | Select EnableControlledFolderAccess`), scripts silently can't create
 files in Documents - `rebuild.ps1` catches this and prints the exact source/destination
 path so you can copy the file yourself in File Explorer (which is allowed by default).
-This isn't specific to this repo; it'll block any script writing to Documents.
+This isn't specific to this repo; it'll block any script writing to Documents. If Documents
+is OneDrive-redirected (Known Folder Move), don't hardcode `$HOME\Documents` anywhere you
+add later either - it's a stale real folder left behind by the redirect, not the one Windows
+and your apps actually use. Resolve it with `[Environment]::GetFolderPath('MyDocuments')`
+instead (`$PROFILE`, used throughout these scripts, already resolves it correctly).
+
+**Windows PowerShell 5.1 ships PSReadLine 2.0.0**, which predates prediction/ghost-text
+entirely - `-PredictionSource` and `-PredictionViewStyle` don't exist on it, and neither does
+the `InlinePrediction` color key. `bootstrap.ps1` installs a modern PSReadLine (2.2.0+) itself
+by downloading its package directly rather than via `Install-Module`, which hangs
+non-interactively the first time it needs to trust PSGallery or bootstrap the NuGet provider,
+even with `-Force`.
 
 **`cc`/`co` shortcuts differ.** The Mac aliases are `cc='claude --dangerously-skip-permissions'`
 and `co='codex --full-auto'`. This machine's PowerShell profile drops

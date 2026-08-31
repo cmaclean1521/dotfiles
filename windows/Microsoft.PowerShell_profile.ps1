@@ -12,7 +12,7 @@ foreach ($dir in @("$HOME\.local\bin", "$HOME\.opencode\bin")) {
 
 # Ghost-text history suggestions, closest Windows equivalent to zsh autosuggestions.
 Set-PSReadLineOption -PredictionSource History -PredictionViewStyle InlineView
-Set-PSReadLineOption -Colors @{ InlineSuggestion = '#5c6370' }
+Set-PSReadLineOption -Colors @{ InlinePrediction = '#5c6370' }
 # Mirrors home.nix's bindkey '^f' autosuggest-accept: ForwardChar accepts the
 # suggestion when the cursor is already at the end of the line (same as RightArrow).
 Set-PSReadLineKeyHandler -Chord 'Ctrl+f' -Function ForwardChar

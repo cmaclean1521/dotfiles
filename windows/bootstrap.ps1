@@ -57,13 +57,43 @@ $result = [UIntPtr]::Zero
 [Win32.NativeMethods]::SendMessageTimeout([IntPtr]0xffff, 0x001D, [UIntPtr]::Zero, $null, 2, 3000, [ref]$result) | Out-Null
 Write-Host "    Hack Nerd Font installed and loaded for this session - fully restart WezTerm (not just reload) to see it."
 
-Write-Host "==> Step 3: XDG_CONFIG_HOME (so Neovim reads ~\.config\nvim like the Mac setup)"
+Write-Host "==> Step 3: modern PSReadLine (the in-box 2.0.0 predates prediction/ghost-text entirely)"
+$psrlVersion = (Get-Module PSReadLine -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1).Version
+if (-not $psrlVersion -or $psrlVersion -lt [Version]'2.2.0') {
+  # Install-Module hangs non-interactively the first time it needs to trust
+  # PSGallery or bootstrap the NuGet provider, even with -Force. Downloading
+  # the .nupkg directly and unpacking it sidesteps that prompt entirely.
+  #
+  # $HOME\Documents is NOT necessarily the real Documents folder: OneDrive's
+  # Known Folder Move redirects the special folder elsewhere while leaving a
+  # stale $HOME\Documents on disk, so anything installed there silently goes
+  # unnoticed. GetFolderPath resolves the real, current redirect target.
+  $docs = [Environment]::GetFolderPath('MyDocuments')
+  $nupkg = "$env:TEMP\psreadline.nupkg.zip"
+  $extract = "$env:TEMP\psreadline_extract"
+  Invoke-WebRequest -Uri 'https://www.powershellgallery.com/api/v2/package/PSReadLine' -OutFile $nupkg
+  Remove-Item $extract -Recurse -Force -ErrorAction SilentlyContinue
+  Expand-Archive -Path $nupkg -DestinationPath $extract -Force
+  [xml]$nuspec = Get-Content (Get-ChildItem "$extract\*.nuspec" | Select-Object -First 1).FullName
+  $version = $nuspec.package.metadata.version
+  $destModuleDir = "$docs\WindowsPowerShell\Modules\PSReadLine\$version"
+  New-Item -ItemType Directory -Force -Path $destModuleDir | Out-Null
+  Get-ChildItem $extract -Exclude '_rels', 'package', '[Content_Types].xml', '*.nuspec' | ForEach-Object {
+    Copy-Item $_.FullName -Destination $destModuleDir -Recurse -Force
+  }
+  Remove-Item $nupkg, $extract -Recurse -Force
+  Write-Host "    Installed PSReadLine $version to $destModuleDir"
+} else {
+  Write-Host "    PSReadLine $psrlVersion already current enough"
+}
+
+Write-Host "==> Step 4: XDG_CONFIG_HOME (so Neovim reads ~\.config\nvim like the Mac setup)"
 # Neovim on Windows defaults to %LOCALAPPDATA%\nvim unless this is set.
 # WezTerm and herdr resolve their own config paths and don't need this.
 [Environment]::SetEnvironmentVariable('XDG_CONFIG_HOME', "$HOME\.config", 'User')
 $env:XDG_CONFIG_HOME = "$HOME\.config"
 
-Write-Host "==> Step 4: apply config files"
+Write-Host "==> Step 5: apply config files"
 & (Join-Path $PSScriptRoot 'rebuild.ps1')
 
 Write-Host "==> Done. Open a new terminal so PATH, XDG_CONFIG_HOME, and the profile take effect."
