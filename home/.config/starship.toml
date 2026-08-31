@@ -1,0 +1,11 @@
+# Ported from home.nix's programs.starship.settings (the Mac build renders this
+# same config from Nix; Windows has no Nix, so this file is the literal source).
+add_newline = false
+format = "$directory$git_branch$git_status$cmd_duration$line_break$character"
+
+[character]
+success_symbol = "[❯](purple)"
+error_symbol = "[❯](red)"
+
+[cmd_duration]
+format = "[$duration]($style) "

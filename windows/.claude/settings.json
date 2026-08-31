@@ -1,0 +1,58 @@
+{
+  "env": {
+    "CLAUDE_STATUSLINE_WIDTH": "90"
+  },
+  "permissions": {
+    "deny": [
+      "Bash(sudo *)",
+      "Edit(~/Force Factor Dropbox/**)",
+      "Write(~/Force Factor Dropbox/**)"
+    ],
+    "ask": [
+      "Bash(rm *)",
+      "Bash(rm -rf *)",
+      "Bash(rmdir *)",
+      "Bash(del *)"
+    ],
+    "defaultMode": "auto"
+  },
+  "model": "sonnet",
+  "theme": "dark-ansi",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
+  "voiceEnabled": true,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/validate-install.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "worktree": {
+    "baseRef": "fresh"
+  },
+  "enableWorkflows": true,
+  "statusLine": {
+    "type": "command",
+    "command": "powershell -NoProfile -File \"$USERPROFILE\\.claude\\statusline.ps1\""
+  },
+  "effortLevel": "xhigh",
+  "showClearContextOnPlanAccept": true,
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "skipAutoPermissionPrompt": true,
+  "modelSettings": {
+    "claude-sonnet-5": {
+      "effortLevel": "xhigh"
+    }
+  }
+}
