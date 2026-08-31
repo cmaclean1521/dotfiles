@@ -12,6 +12,11 @@ config.hide_tab_bar_if_only_one_tab = true
 -- title bar with minimize/maximize/close, since there's no OS-level way to
 -- close a decoration-less window there the way macOS's menu bar allows.
 config.window_decorations = wezterm.target_triple:find("windows") and "TITLE | RESIZE" or "RESIZE"
+-- Without this, WezTerm falls back to %COMSPEC% (cmd.exe) on Windows, since
+-- there's no login-shell concept to resolve like there is on macOS/Linux.
+if wezterm.target_triple:find("windows") then
+	config.default_prog = { "powershell.exe" }
+end
 
 -- Dim unfocused windows so the focused one is obvious at a glance.
 local UNFOCUSED_FOREGROUND_TEXT_HSB = { hue = 1.0, saturation = 0.25, brightness = 0.45 }
